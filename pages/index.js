@@ -3,12 +3,13 @@ import Head from 'next/head';
 import PropTypes from 'prop-types';
 import path from 'path';
 import classNames from 'classnames';
-
 import { listFiles } from '../files';
+import * as _ from 'lodash';
 
 // Used below, these need to be registered
-import MarkdownEditor from '../MarkdownEditor';
+import MarkdownEditor from '../components/MarkdownEditor';
 import PlaintextEditor from '../components/PlaintextEditor';
+import CodePreview from '../components/CodePreview';
 
 import IconPlaintextSVG from '../public/icon-plaintext.svg';
 import IconMarkdownSVG from '../public/icon-markdown.svg';
@@ -99,8 +100,51 @@ Previewer.propTypes = {
 
 // Uncomment keys to register editors for media types
 const REGISTERED_EDITORS = {
-  // "text/plain": PlaintextEditor,
-  // "text/markdown": MarkdownEditor,
+  'text/plain': PlaintextEditor,
+  'text/markdown': MarkdownEditor,
+  'text/javascript': CodePreview,
+  'application/json': CodePreview
+};
+
+let saveItems = (file, content) => {
+  localStorage.setItem(
+    `files-${file.name}`,
+    JSON.stringify({
+      lastModified: file.lastModified,
+      lastModifiedDate: file.lastModifiedDate,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      content
+    })
+  );
+};
+
+let loadItems = files => {
+  //localStorage.clear();
+  let parsedData = Object.entries(localStorage);
+  parsedData = _.map(parsedData, item => ({
+    id: item[0],
+    file: JSON.parse(item[1])
+  }));
+  console.log(parsedData);
+  if (parsedData.length === 0 ) {
+    return files
+  }
+  return _.map(files, item => {
+    let filter = _.filter(
+      parsedData,
+      parsedItem => parsedItem.file.name === item.name
+    );
+    if (filter.length >= 1) {
+      let newItem = filter[0].file;
+      return new File([newItem.content], newItem.name, {
+        type: newItem.type,
+        lastModified: newItem.lastModified
+      });
+    }
+    return item;
+  });
 };
 
 function PlaintextFilesChallenge() {
@@ -109,13 +153,18 @@ function PlaintextFilesChallenge() {
 
   useEffect(() => {
     const files = listFiles();
-    setFiles(files);
+    setFiles(loadItems(files));
   }, []);
 
-  const write = file => {
-    console.log('Writing soon... ', file.name);
-
-    // TODO: Write the file to the `files` array
+  const write = (file, content) => {
+    let oldFileIndex = _.findIndex(files, ['name', file.name]);
+    let newFile = new File([content], file.name, {
+      type: file.type,
+      lastModified: file.lastModified
+    });
+    files[oldFileIndex] = newFile;
+    setFiles(files);
+    saveItems(newFile, content);
   };
 
   const Editor = activeFile ? REGISTERED_EDITORS[activeFile.type] : null;
