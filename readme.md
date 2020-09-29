@@ -16,4 +16,5 @@
   <li>Did not hide save button if text was not changed</li>
   <li>Should have kept consistent editors all for each file type</li>
   <li>Should have allowed user to add files from pc</li>
+  <li>Toast notification / alert on save</li>
 </ul>
