@@ -15,5 +15,5 @@
   <li>Highlighting code did not work</li>
   <li>Did not hide save button if text was not changed</li>
   <li>Should have kept consistent editors all for each file type</li>
-  <li>Allow user to add files from pc</li>
+  <li>Should have allowed user to add files from pc</li>
 </ul>
